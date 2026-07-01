@@ -1,11 +1,36 @@
 import { members } from '../data/members.js'
 import Avatar from '../components/Avatar.jsx'
 
-function uniformLabel(u) {
-  return u ? `📷 ${u}` : ''
+function Field({ label, value }) {
+  if (!value) return null
+  return (
+    <div className="mf-row">
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  )
+}
+
+function Chips({ value }) {
+  if (!value) return null
+  const items = value.split(/[、，,\s]+/).filter(Boolean)
+  return (
+    <div className="member-tags">
+      {items.map((t, i) => (
+        <span className="tag" key={i}>{t}</span>
+      ))}
+    </div>
+  )
 }
 
 function MemberCard({ m }) {
+  const meta = [m.species, m.gender].filter(Boolean).join(' · ')
+  const stats = [
+    m.height && `身高 ${m.height}`,
+    m.weight && `體重 ${m.weight}`,
+    m.birthday && `生日 ${m.birthday}`,
+  ].filter(Boolean)
+
   return (
     <article className={`member-card${m.teacher ? ' member-card-teacher' : ''}`}>
       <div className="member-head">
@@ -13,32 +38,38 @@ function MemberCard({ m }) {
         <div className="member-id">
           <div className="member-name">
             {m.name}
-            {m.nickname && <span className="member-nick">「{m.nickname}」</span>}
+            {typeof m.seat === 'number' && m.seat > 0 && (
+              <span className="member-seat">#{m.seat}</span>
+            )}
           </div>
           {m.title && <div className="member-title">{m.title}</div>}
-          {m.uniform && <div className="member-uniform">{uniformLabel(m.uniform)}</div>}
+          {meta && <div className="member-meta-line">{meta}</div>}
         </div>
       </div>
 
-      {m.bio && <p className="member-bio">{m.bio}</p>}
-
-      {m.tags && m.tags.length > 0 && (
-        <div className="member-tags">
-          {m.tags.map((t) => (
-            <span className="tag" key={t}>#{t}</span>
+      {stats.length > 0 && (
+        <div className="member-stats">
+          {stats.map((s, i) => (
+            <span key={i}>{s}</span>
           ))}
         </div>
       )}
 
-      {m.links && m.links.length > 0 && (
-        <div className="member-links">
-          {m.links.map((l, i) => (
-            <a className="member-link" href={l.url} key={i} target="_blank" rel="noreferrer">
-              🔗 {l.label}
-            </a>
-          ))}
+      {m.subjects && (
+        <div className="member-subjects">
+          <span className="mf-label">喜歡科目</span>
+          <Chips value={m.subjects} />
         </div>
       )}
+
+      <dl className="member-fields">
+        <Field label="參加社團" value={m.club} />
+        <Field label="喜歡" value={m.likes} />
+        <Field label="討厭" value={m.dislikes} />
+        <Field label="特殊疾病" value={m.condition} />
+      </dl>
+
+      {m.note && <p className="member-note">{m.note}</p>}
     </article>
   )
 }
@@ -49,14 +80,18 @@ export default function Members() {
 
   return (
     <div className="page">
-      <section className="hero hero-sm">
+      <section className="hero">
+        <p className="hero-kicker">PORTRAITS / {members.length} PEOPLE</p>
         <h1 className="hero-title">個人介紹</h1>
-        <p className="hero-motto">一人一格，內容由本人自由發揮 · 共 {members.length} 人</p>
+        <p className="hero-motto">繪俄史藝術高等學院 2年A班，班導師 1 位、同學 {students.length} 位。</p>
       </section>
 
       {teachers.length > 0 && (
         <section className="block">
-          <h2 className="section-title">班導師</h2>
+          <div className="section-head">
+            <span className="section-index">01</span>
+            <h2 className="section-title">班導師</h2>
+          </div>
           <div className="members-grid">
             {teachers.map((m) => (
               <MemberCard m={m} key={m.name} />
@@ -66,13 +101,16 @@ export default function Members() {
       )}
 
       <section className="block">
-        <h2 className="section-title">同學們</h2>
+        <div className="section-head">
+          <span className="section-index">02</span>
+          <h2 className="section-title">同學們</h2>
+        </div>
         <p className="section-sub">
-          照片規定：僅限校園服裝（制服、運動服，或競賽相關服裝）。內容嚴禁歧視、霸凌等不當言論。
+          依座號排列。內容由本人提供，嚴禁歧視、霸凌等不當言論。
         </p>
         <div className="members-grid">
           {students.map((m) => (
-            <MemberCard m={m} key={m.name} />
+            <MemberCard m={m} key={m.seat} />
           ))}
         </div>
       </section>
